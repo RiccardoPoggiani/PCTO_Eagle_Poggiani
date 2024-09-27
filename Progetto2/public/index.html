@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoraggio delle prestazioni</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        .resource {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input {
+            padding: 10px 15px;
+            background: white;
+            width: 110px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="titolo">Monitoraggio delle prestazioni</h1>
+    <div id="resources">
+        <div class="resource">
+            <h2>RAM</h2>
+            <p id="ramTotal"></p>
+            <p id="ramFree"></p>
+            <p id="ramUsed"></p>
+            <p id="ramUsage"></p>
+            <p id="ramStressed"></p>
+        </div>
+        <div class="resource">
+            <h2>CPU</h2>
+            <p id="cpuUsage"></p>
+            <p id="cpuStressed"></p>
+        </div>
+        <div class="resource">
+            <h2>Disco</h2>
+            <p id="diskTotal"></p>
+            <p id="diskFree"></p>
+            <p id="diskUsed"></p>
+            <p id="diskUsage"></p>
+            <p id="diskStressed"></p>
+        </div>
+    </div>
+    <br>
+    <button onclick="fetchUsageData()">Ricarica i dati aggiornati</button>
+    <br><br>
+    <p>Inserisci data e orario dei dati che vuoi visulizzare:</p>
+    <input type="text" id="anno" placeholder="Anno (4 cifre)">
+    <input type="text" id="mese" placeholder="Mese (2 cifre)">
+    <input type="text" id="giorno" placeholder="Giorno (2 cifre)">
+    <input type="text" id="ore" placeholder="Ore (2 cifre)">
+    <input type="text" id="minuti" placeholder="Minuti (2 cifre)">
+    <button onclick="searchUsageData()">Avvia ricerca</button>
+
+    <script>
+        // Funzione per ottenere i dati dal server e aggiornare la pagina
+        async function fetchUsageData() {
+            
+            try {
+                const response = await fetch('http://192.168.247.71:3000/api/usage');
+                const data = await response.json();
+
+                console.log(data);
+
+                // Aggiorna il titolo con il timestamp
+                document.getElementById('titolo').innerText = `Monitoraggio delle prestazioni del ${data.TIMESTAMP}`;
+
+                // Aggiorna i dati RAM, CPU e Disco
+                document.getElementById('ramTotal').innerText = `Totale: ${data.RAM_total}`;
+                document.getElementById('ramFree').innerText = `Libero: ${data.RAM_free}`;
+                document.getElementById('ramUsed').innerText = `Usato: ${data.RAM_used}`;
+                document.getElementById('ramUsage').innerText = `Utilizzo: ${data.RAM_usage}`;
+                document.getElementById('ramStressed').innerText = `Stressed: ${data.RAM_stressed ? 'Sì' : 'No'}`;
+
+                document.getElementById('cpuUsage').innerText = `Utilizzo: ${data.CPU_usage}`;
+                document.getElementById('cpuStressed').innerText = `Stressed: ${data.CPU_stressed ? 'Sì' : 'No'}`;
+
+                document.getElementById('diskTotal').innerText = `Totale: ${data.Disk_total}`;
+                document.getElementById('diskFree').innerText = `Libero: ${data.Disk_free}`;
+                document.getElementById('diskUsed').innerText = `Usato: ${data.Disk_used}`;
+                document.getElementById('diskUsage').innerText = `Utilizzo: ${data.Disk_usage}`;
+                document.getElementById('diskStressed').innerText = `Stressed: ${data.Disk_stressed ? 'Sì' : 'No'}`;
+
+            } catch (error) {
+                console.error('Errore nel recupero dei dati:', error);
+            }
+        }
+        
+        fetchUsageData();
+
+
+        async function searchUsageData() {
+            let anno = document.getElementById('anno').value;
+            let mese = document.getElementById('mese').value;
+            let giorno = document.getElementById('giorno').value;
+            let ore = document.getElementById('ore').value;
+            let minuti = document.getElementById('minuti').value;
+
+            // Assicurati che i campi siano stati compilati
+            if (!anno || !mese || !giorno || !ore || !minuti) {
+                alert('Per favore, compila tutti i campi!');
+                return;
+            }
+
+            // Crea un oggetto Data a partire dai valori forniti
+            const searchDateTime = new Date(Date.UTC(anno, mese-1, giorno, ore, minuti));
+            const formattedDateTime = searchDateTime.toISOString(); // Converti in formato ISO 8601
+            const outputString = formattedDateTime.substring(0, 17);
+           // console.log(outputString);
+            
+            // Effettua la richiesta per cercare i dati
+            // Effettua la richiesta per cercare i dati
+            try {
+                const response = await fetch('http://192.168.247.71:5000/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ searchTerm: outputString }), // Invia il termine di ricerca
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const result = await response.json(); 
+                console.log(result);
+                    // Assumi che il server restituisca JSON
+                    // Aggiorna il titolo con il timestamp
+                    document.getElementById('titolo').innerText = `Monitoraggio delle prestazioni del ${result[0].timestamp}`;
+
+                    // Aggiorna i dati RAM, CPU e Disco
+                    document.getElementById('ramTotal').innerText = `Totale: ${result[0].ram_total}`;
+                    document.getElementById('ramFree').innerText = `Libero: ${result[0].ram_free}`;
+                    document.getElementById('ramUsed').innerText = `Usato: ${result[0].ram_used}`;
+                    document.getElementById('ramUsage').innerText = `Utilizzo: ${result[0].ram_usage}`;
+                    document.getElementById('ramStressed').innerText = `Stressed: ${result[0].ram_stressed ? 'Sì' : 'No'}`;
+
+                    document.getElementById('cpuUsage').innerText = `Utilizzo: ${result[0].cpu_usage}`;
+                    document.getElementById('cpuStressed').innerText = `Stressed: ${result[0].cpu_stressed ? 'Sì' : 'No'}`;
+
+                    document.getElementById('diskTotal').innerText = `Totale: ${result[0].disk_total}`;
+                    document.getElementById('diskFree').innerText = `Libero: ${result[0].disk_free}`;
+                    document.getElementById('diskUsed').innerText = `Usato: ${result[0].disk_used}`;
+                    document.getElementById('diskUsage').innerText = `Utilizzo: ${result[0].disk_usage}`;
+                    document.getElementById('diskStressed').innerText = `Stressed: ${result[0].disk_stressed ? 'Sì' : 'No'}`;
+          
+
+            } catch (error) {
+                console.error('Errore nella ricerca:', error);
+                alert('Dato non disponibile');
+            }
+        }
+    </script>
+</body>
+</html>
