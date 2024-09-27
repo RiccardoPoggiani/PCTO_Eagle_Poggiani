@@ -1,0 +1,23 @@
+{
+  "TIMESTAMP": {
+    "time": "2024-09-25T14:32:22.194Z"
+  },
+  "RAM": {
+    "total": "3844.23 MB",
+    "free": "2290.28 MB",
+    "used": "1553.96 MB",
+    "usage": "40.42%",
+    "stressed": false
+  },
+  "CPU": {
+    "usage": "1.98%",
+    "stressed": false
+  },
+  "Disk": {
+    "total": "36493.83 MB",
+    "free": "31332.89 MB",
+    "used": "5160.94 MB",
+    "usage": "14.14%",
+    "stressed": false
+  }
+}
